@@ -51,7 +51,7 @@ setup(
         ],
     },
 
-    data_files = {
-        "/etc": [ "certbot_inwx_hook.sample.ini" ],
-    },
+    data_files = [
+        ("/etc", [ "certbot_inwx_hook/certbot_inwx_hook.sample.ini" ]),
+    ],
 )
