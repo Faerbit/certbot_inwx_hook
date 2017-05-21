@@ -1,8 +1,8 @@
 import logging
 import time
+import traceback
 from configparser import ConfigParser
 from os import environ, path
-from sys import stderr
 
 import dns.resolver
 import dns.exception
@@ -11,6 +11,7 @@ from .inwx import domrobot
 from .constants import (DEFAULT_CONFIG_FILE_PATH, CONFIG_OVERWRITE_ENVVAR, 
     API_URL)
 
+logger = logging.getLogger(__name__)
 
 class InwxChallenge:
 
@@ -31,12 +32,13 @@ class InwxChallenge:
                     "user": config.get("default", "user"),
                     "pass": config.get("default", "password")
                     })
-                self.nameservers = config.get("default", "nameservers")
+                if "nameservers" in config["default"]:
+                    self.nameservers = config.get("default", "nameservers")
                 break
         else:
-            print("Please provide a configuration file under "
+            logger.error("Please provide a configuration file under "
                     + " or ".join(map(lambda x: "'" + str(x) + "'",
-                        config_file_locations)) + ".", file=sys.stderr)
+                        config_file_locations)) + ".")
             exit(1)
         self.domain = domain
         self.validation = validation
@@ -47,33 +49,51 @@ class InwxChallenge:
 
     def deploy_challenge(self):
         """Creates challenge TXT record"""
-        print("Creating TXT record for {}".format(self.domain))
-        tld = ".".join(self.domain.rsplit(".")[-2:])
+        logger.info(f"Creating TXT record for \"{self.domain}\"...")
+        tld = ".".join(self.domain.split(".")[-2:])
         name = "_acme-challenge." + self.domain
         response = self.api.nameserver.createRecord({"domain": tld,
             "type": "TXT", "content": self.validation, "name": name})
-        self.recordId = response["resData"]["id"]
-        print("TXT record registered...")
-        if not self.nameservers:
+        recordId = response["resData"]["id"]
+        logger.info("TXT record registered...")
+        if not (hasattr(self, "nameservers") and self.nameservers):
             return
-        print("Checking if DNS has propagated...")
-        for i in range(20):
-            if (self._has_dns_propagated() == False and i < 19):
-                print(f"Try {i:2}/20 failed: DNS not propagated, "
+        logger.info("Checking if DNS has propagated...")
+        for i in range(1, 21):
+            if (self._has_dns_propagated() == False and i < 20):
+                logger.info(f"Try {i:2}/20 failed: DNS not propagated, "
                     "waiting 30s...")
                 time.sleep(30)
-            elif (self._has_dns_propagated() == False and i == 19):
-                print(f"Try {i:2}/20 failed: DNS not propagated.",
-                        file=sys.stderr)
+            elif (self._has_dns_propagated() == False and i == 20):
+                logger.error(f"Try {i:2}/20 failed: DNS not propagated.")
                 break
             else:
                 break
-        print("DNS propagated.")
+        logger.info("DNS propagated.")
+        return recordId
 
-    def _clean_challenge(self):
+    def clean_challenge(self):
         """Deletes challenge TXT record"""
-        self.api.nameserver.deleteRecord({"id":self.recordId})
-        print("Deleted TXT record for {}".format(self.domain))
+        tld = ".".join(self.domain.split(".")[-2:])
+        name = "_acme-challenge." + self.domain
+        name= ".".join(name.split(".")[:-2])
+        response = self.api.nameserver.info({"domain": tld, "name": name})
+        record = response["resData"]["record"][0]
+        if record["type"] != "TXT":
+            logger.error(
+                f"Could not find correct record for domain \"{self.domain}\". "
+                f"Type mismatch should be \"TXT\", "
+                f"but is \"{record['type']}\".")
+            return
+        if record["content"] != self.validation:
+            logger.error(
+                f"Could not find correct record for domain \"{self.domain}\". "
+                f"Content mismatch should be \"{self.validation}\", "
+                f"but is \"{record['content']}\".")
+            return
+        recordId = record["id"]
+        self.api.nameserver.deleteRecord({"id": recordId})
+        logger.info(f"Deleted TXT record for \"{self.domain}\".")
 
     def _has_dns_propagated(self):
         """Checks if the TXT record has propagated."""
@@ -87,6 +107,8 @@ class InwxChallenge:
                 for txt_record in rdata.strings:
                     txt_records.append(txt_record)
         except dns.exception.DNSException as error:
+            if (self.debug):
+                traceback.print_exc()
             return False
 
         for txt_record in txt_records:
