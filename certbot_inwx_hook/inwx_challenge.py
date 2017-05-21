@@ -25,9 +25,10 @@ class InwxChallenge:
             if path.isfile(cfg_file):
                 config = ConfigParser()
                 config.read(cfg_file)
+                self.debug = config.getboolean("default", "debug",
+                        fallback=False)
                 self.api = domrobot(API_URL, 
-                        debug = config.getboolean("default", "debug",
-                            fallback=False))
+                        debug = self.debug)
                 self.api.account.login({
                     "user": config.get("default", "user"),
                     "pass": config.get("default", "password")
