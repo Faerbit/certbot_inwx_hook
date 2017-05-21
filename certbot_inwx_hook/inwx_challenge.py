@@ -3,6 +3,7 @@ import time
 import traceback
 from configparser import ConfigParser
 from os import environ, path
+from ast import literal_eval
 
 import dns.resolver
 import dns.exception
@@ -34,7 +35,10 @@ class InwxChallenge:
                     "pass": config.get("default", "password")
                     })
                 if "nameservers" in config["default"]:
-                    self.nameservers = config.get("default", "nameservers")
+                    self.nameservers = literal_eval(
+                            config.get("default", "nameservers", fallback=[]))
+                else:
+                    self.nameservers = []
                 break
         else:
             logger.error("Please provide a configuration file under "
@@ -57,8 +61,6 @@ class InwxChallenge:
             "type": "TXT", "content": self.validation, "name": name})
         recordId = response["resData"]["id"]
         logger.info("TXT record registered...")
-        if not (hasattr(self, "nameservers") and self.nameservers):
-            return
         logger.info("Checking if DNS has propagated...")
         for i in range(1, 21):
             if (self._has_dns_propagated() == False and i < 20):
@@ -102,11 +104,14 @@ class InwxChallenge:
         name = "_acme-challenge." + self.domain
         try:
             resolver = dns.resolver.Resolver()
-            resolver.nameservers = self.nameservers
-            dns_response = resolver.query(name, 'TXT')
-            for rdata in dns_response:
-                for txt_record in rdata.strings:
-                    txt_records.append(txt_record)
+            nameservers = self.nameservers
+            nameservers.extend(resolver.nameservers)
+            resolver.nameservers = nameservers
+            dns_response = resolver.query(name, "TXT")
+            if hasattr(dns_response.response, "answer"):
+                for answer in dns_response.response.answer:
+                    for record in answer.items:
+                        txt_records.append(record.to_text().replace("\"", ""))
         except dns.exception.DNSException as error:
             if (self.debug):
                 traceback.print_exc()
