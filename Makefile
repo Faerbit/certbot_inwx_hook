@@ -8,7 +8,7 @@ build: clean
 	python setup.py sdist bdist_wheel
 
 upload: clean build
-	twine -s -i faerbit@mgmail.com upload dist/*
+	twine upload -s -i faerbit@gmail.com  dist/*
 
 clean:
 	rm -rf build dist *.egg-info
