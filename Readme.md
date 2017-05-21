@@ -1,4 +1,4 @@
-# certbot INWX hook
+# certbot INWX hook [![PyPI version](https://badge.fury.io/py/certbot-inwx-hook.svg)](https://badge.fury.io/py/certbot-inwx-hook)
 
 A hook to be used with the `--manual` option of the `certonly` subcommand of
 certbot. The hooks work with the API of [INWX](https://inwx.com) and the
