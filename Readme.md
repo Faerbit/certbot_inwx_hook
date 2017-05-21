@@ -10,13 +10,14 @@ entry points. Just supply these to the `--manual-auth-hook` and
 `--manual-cleanup-hook` of certbot.
 
 ## Configuration
-The configuration file is stored under `/etc/certbot_inwx_hook.ini`. You can
-set the `$CERTBOT_INWX_HOOK_CONFIG_FILE` environment variable to a custom
-location, which will take precedence over the default location if set.
-In the config file you have to supply your login information.
-Optionally you can set additioanl nameserver IPs to check for successful
-propagation of the challenge. You would want ot provide the IPs of your
-registrar here to speed things up.
+The configuration file is stored under `/etc/certbot_inwx_hook.ini`. A sample
+is provided under `/etc/certbot_iwnx_hook.sample.ini`. You can set the
+`$CERTBOT_INWX_HOOK_CONFIG_FILE` environment variable to a custom location,
+which will take precedence over the default location if set.
+In the config file you have to supply your login information. Optionally you
+can set additioanl nameserver IPs to check for successful propagation of the
+challenge. You would want ot provide the IPs of your registrar here to speed
+things up.
 
 ## License
 This work is licensed under the MIT license. See License.md for details.

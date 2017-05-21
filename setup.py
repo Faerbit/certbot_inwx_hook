@@ -19,7 +19,7 @@ except:
 
 setup(
     name = 'certbot_inwx_hook',
-    version = "v1.0",
+    version = "v1.0.1",
 
     license = 'MIT',
     description = "Hook for certbot manual mode and the INWX API",
@@ -51,7 +51,7 @@ setup(
         ],
     },
 
-    package_data = {
-        "/etc/certbot_inwx_hook.sample.ini": [ "certbot_inwx_hook.sample.ini" ],
+    data_files = {
+        "/etc": [ "certbot_inwx_hook.sample.ini" ],
     },
 )
