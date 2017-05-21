@@ -5,7 +5,7 @@ import sys
 import logging
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-        style="{", format="Certbot INWX hook {levelname} {message}")
+        style="{", format="certbot_inwx_hook:{levelname}: {message}")
 
 from .constants import CERTBOT_DOMAIN_ENV, CERTBOT_VALIDATION_ENV
 from .inwx_challenge import InwxChallenge
