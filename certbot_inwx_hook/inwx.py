@@ -30,11 +30,10 @@ class domrobot ():
         if(self.cookie!=None):
             headers['Cookie'] = self.cookie
 
-        print(headers)
         req = urllib.request.Request(self.url, bytearray(requestContent,
             'ascii'), headers)
-        response = urllib.request.urlopen(req)
 
+        response = urllib.request.urlopen(req)
         responseContent = response.read()
 
         cookies = response.getheader('Set-Cookie')
@@ -43,9 +42,13 @@ class domrobot ():
             print("Response: " + responseContent.decode("utf-8"))
         apiReturn = xmlrpc.client.loads(responseContent)
         apiReturn = apiReturn[0][0]
+        if (apiReturn["code"] == 2200 and
+                "Authentication error" in apiReturn["msg"]):
+            raise NameError("Unable to log in. Check your login configuration")
+            return False
         if(apiReturn["code"]!=1000):
             raise NameError(f"There was a problem: {apiReturn['msg']} "
-                    "(Error code {apiReturn['code']})")
+                    f"(Error code {apiReturn['code']})")
             return False
 
         if(cookies!=None):

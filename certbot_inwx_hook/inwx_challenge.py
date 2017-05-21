@@ -11,7 +11,6 @@ from .inwx import domrobot
 from .constants import (DEFAULT_CONFIG_FILE_PATH, CONFIG_OVERWRITE_ENVVAR, 
     API_URL)
 
-logger = logging.getLogger(__name__)
 
 class InwxChallenge:
 
@@ -28,19 +27,17 @@ class InwxChallenge:
                 self.api = domrobot(API_URL, 
                         debug = config.getboolean("default", "debug",
                             fallback=False))
-                # TODO check for failure
                 self.api.account.login({
                     "user": config.get("default", "user"),
                     "pass": config.get("default", "password")
                     })
-                self.nameservers = config.get("nameservers")
+                self.nameservers = config.get("default", "nameservers")
+                break
         else:
-            logger.error("Please provide a configuration file under "
+            print("Please provide a configuration file under "
                     + " or ".join(map(lambda x: "'" + str(x) + "'",
-                        config_file_locations)) + ".")
+                        config_file_locations)) + ".", file=sys.stderr)
             exit(1)
-        self.domain = environ.get("CERTBOT_DOMAIN")
-        self.validation = environ.get("CERTBOT_VALIDATION")
         self.domain = domain
         self.validation = validation
 
@@ -50,32 +47,33 @@ class InwxChallenge:
 
     def deploy_challenge(self):
         """Creates challenge TXT record"""
-        logger.info("Creating TXT record for {}".format(self.domain))
+        print("Creating TXT record for {}".format(self.domain))
         tld = ".".join(self.domain.rsplit(".")[-2:])
         name = "_acme-challenge." + self.domain
         response = self.api.nameserver.createRecord({"domain": tld,
             "type": "TXT", "content": self.validation, "name": name})
         self.recordId = response["resData"]["id"]
-        logger.info("TXT record registered...")
+        print("TXT record registered...")
         if not self.nameservers:
             return
-        logger.info("Checking if DNS has propagated...")
+        print("Checking if DNS has propagated...")
         for i in range(20):
             if (self._has_dns_propagated() == False and i < 19):
-                logger.info(f"Try {i:2}/20 failed: DNS not propagated, "
+                print(f"Try {i:2}/20 failed: DNS not propagated, "
                     "waiting 30s...")
                 time.sleep(30)
             elif (self._has_dns_propagated() == False and i == 19):
-                logger.info(f"Try {i:2}/20 failed: DNS not propagated.")
+                print(f"Try {i:2}/20 failed: DNS not propagated.",
+                        file=sys.stderr)
                 break
             else:
                 break
-        logger.info("DNS propagated.")
+        print("DNS propagated.")
 
     def _clean_challenge(self):
         """Deletes challenge TXT record"""
         self.api.nameserver.deleteRecord({"id":self.recordId})
-        logger.info("Deleted TXT record for {}".format(self.domain))
+        print("Deleted TXT record for {}".format(self.domain))
 
     def _has_dns_propagated(self):
         """Checks if the TXT record has propagated."""

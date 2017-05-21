@@ -1,4 +1,4 @@
-API_URL = "https://api.domrobot.com/xmlrpc"
+API_URL = "https://api.domrobot.com/xmlrpc/"
 DEFAULT_CONFIG_FILE_PATH = "/etc/certbot_inwx_hook.ini"
 CONFIG_OVERWRITE_ENVVAR = "CERTBOT_INWX_HOOK_CONFIG_FILE"
 CERTBOT_DOMAIN_ENV = "CERTBOT_DOMAIN"

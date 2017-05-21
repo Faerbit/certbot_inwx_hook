@@ -22,7 +22,7 @@ def child():
     try:
         domain = os.environ.get(CERTBOT_DOMAIN_ENV)
         validation = os.environ.get(CERTBOT_VALIDATION_ENV)
-        InwxChallenge(domain, validation).deploy()
+        InwxChallenge(domain, validation).deploy_challenge()
         with open(get_pid_file_path(domain), "w") as pid_file:
             pid_file.write(str(os.getpid()))
         os.kill(os.getppid(), SIGCHLD)
