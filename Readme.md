@@ -11,7 +11,7 @@ entry points. Just supply these to the `--manual-auth-hook` and
 
 ## Configuration
 The configuration file is stored under `/etc/certbot_inwx_hook.ini`. A sample
-is provided under `/etc/certbot_iwnx_hook.sample.ini`. You can set the
+is provided under `certbot_iwnx_hook.sample.ini`. You can set the
 `$CERTBOT_INWX_HOOK_CONFIG_FILE` environment variable to a custom location,
 which will take precedence over the default location if set.
 In the config file you have to supply your login information. Optionally you
